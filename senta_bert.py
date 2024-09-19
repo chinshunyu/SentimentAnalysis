@@ -1,16 +1,20 @@
-import onnxruntime
-from transformers import BertTokenizer
-import numpy as np
 import logging
 
-class SentimentEngine():
+import numpy as np
+import onnxruntime
+from transformers import BertTokenizer
+
+
+class SentimentEngine:
     def __init__(self, model_path):
-        logging.info('Initializing Sentiment Engine...')
+        logging.info("Initializing Sentiment Engine...")
         onnx_model_path = model_path
 
-        self.ort_session = onnxruntime.InferenceSession(onnx_model_path, providers=['CPUExecutionProvider'])
+        self.ort_session = onnxruntime.InferenceSession(
+            onnx_model_path, providers=["CPUExecutionProvider"]
+        )
 
-        self.tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
+        self.tokenizer = BertTokenizer.from_pretrained("bert-base-chinese")
 
     def infer(self, text):
         tokens = self.tokenizer(text, return_tensors="np")
@@ -24,10 +28,9 @@ class SentimentEngine():
         logits = self.ort_session.run(["logits"], input_dict)[0]
         probabilities = np.exp(logits) / np.sum(np.exp(logits), axis=-1, keepdims=True)
         predicted = np.argmax(probabilities, axis=1)[0]
-        logging.info(f'Sentiment Engine Infer: {predicted}')
+        logging.info(f"Sentiment Engine Infer: {predicted}")
         return predicted
 
 
-se = SentimentEngine('./test.onnx')
-print(se.infer('你真烦'))
-
+se = SentimentEngine("./test.onnx")
+print(se.infer("你真烦"))
